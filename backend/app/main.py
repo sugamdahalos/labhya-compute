@@ -1,0 +1,45 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.db import init_db
+from app.routers.auth import router as auth_router
+from app.routers.gpus import router as gpus_router
+from app.routers.wallets import router as wallets_router
+from app.routers.sessions import router as sessions_router
+from app.routers.dashboard import router as dashboard_router
+from app.routers.profiles import hosts_router, renters_router, transactions_router
+
+app = FastAPI(
+    title="Labhya Compute API",
+    description="Backend REST API for Labhya Compute GPU rental platform",
+    version="1.0.0"
+)
+
+from app.config import settings
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.get_cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include Routers
+app.include_router(auth_router)
+app.include_router(gpus_router)
+app.include_router(wallets_router)
+app.include_router(sessions_router)
+app.include_router(dashboard_router)
+app.include_router(hosts_router)
+app.include_router(renters_router)
+app.include_router(transactions_router)
+
+@app.on_event("startup")
+def on_startup():
+    # Automatically initialize tables in Postgres if not exists
+    init_db()
+
+@app.get("/")
+def read_root():
+    return {"message": "Labhya Compute API is online", "status": "ok"}
